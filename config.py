@@ -7,7 +7,7 @@ import os
 
 # Claude API Configuration
 CLAUDE_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-20250514")
+CLAUDE_MODEL = os.environ.get("ANTHROPIC_MODEL", os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6"))
 CLAUDE_MAX_TOKENS = int(os.environ.get("CLAUDE_MAX_TOKENS", "8192"))
 
 # SEC EDGAR Configuration
