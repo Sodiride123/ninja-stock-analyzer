@@ -221,7 +221,7 @@ earnings_app/
 Edit `config.py` to customize:
 
 ```python
-CLAUDE_MODEL = "claude-sonnet-4-20250514"  # AI model
+CLAUDE_MODEL = "claude-sonnet-4-6"  # AI model
 CLAUDE_MAX_TOKENS = 8192                    # Max response length
 SERVER_PORT = 8090                          # Dashboard port
 MAX_REPORT_PAGES = 5                        # PDF page limit
