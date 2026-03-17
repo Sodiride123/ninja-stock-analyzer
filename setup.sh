@@ -2,6 +2,7 @@
 # ============================================================
 # Setup Script — Install all dependencies for Earnings App
 # Run this once on a fresh VM after cloning the repo.
+# Assumes: Python 3, pip, curl, and Claude Code are pre-installed.
 # ============================================================
 
 set -e
@@ -30,27 +31,19 @@ sudo apt-get install -y --no-install-recommends \
     libxcb-keysyms1 \
     libxcb-randr0 \
     libxcb-render-util0 \
-    libxcb-xinerama0 \
-    curl \
-    ca-certificates
+    libxcb-xinerama0
 
-echo ""
-echo "=== Installing Node.js 20.x ==="
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
-sudo apt-get install -y nodejs
-
-echo ""
-echo "=== Installing Claude CLI ==="
-sudo npm install -g @anthropic-ai/claude-code
+# wkhtmltopdf    — converts SEC HTML filings to PDF
+# poppler-utils  — pdftotext/pdfinfo for text extraction
+# ffmpeg         — encodes animation frames into MP4
+# xvfb + libgl*  — virtual display for headless animation rendering (arcade/OpenGL)
 
 echo ""
 echo "=== Installing Python dependencies ==="
 pip install -r requirements.txt
 
 echo ""
-echo "=== Creating reports directory ==="
 mkdir -p reports
 
-echo ""
 echo "=== Setup complete ==="
 echo "Copy .env.example to .env and set your ANTHROPIC_API_KEY before running the app."
