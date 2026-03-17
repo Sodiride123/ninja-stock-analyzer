@@ -131,7 +131,7 @@ WRAPPER_CONFIG = {
     "error_file":  "/tmp/claude_earnings_error.txt",
 
     # Working directory passed to Claude CLI subprocess
-    "working_dir": "/workspace/earnings_app",
+    "working_dir": "/workspace/ninja-stock-analyzer",
 
     # Subprocess timeout in seconds
     "timeout": 600,
