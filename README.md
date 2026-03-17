@@ -1,11 +1,10 @@
-# 📊 Earnings Research AI
+# 📊 Ninja Stock Analyzer
 
 An autonomous AI-powered quarterly earnings research application that downloads SEC filings, analyzes financial data, and generates comprehensive reports with animated visualizations.
 
 ![Dashboard](https://img.shields.io/badge/Dashboard-Live-10B981?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Claude](https://img.shields.io/badge/Claude-AI-FF6B35?style=for-the-badge)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
 ## ✨ Features
 
@@ -16,9 +15,11 @@ An autonomous AI-powered quarterly earnings research application that downloads 
 - **PDF Report Generation** — Professional multi-page reports with cover page and logo
 - **Animated OHLC Videos** — 15-second MP4 animations of stock price movement
 - **Ten-Point Analysis** — 5 bullish + 5 bearish bullet points per company
-- **Web Dashboard** — Real-time pipeline monitoring with 11 content tabs
+- **Web Dashboard** — Real-time pipeline monitoring with tabs for each analysis section
+- **Stop Anytime** — Cancel analysis mid-run while keeping completed results
 - **Persistent Storage** — All analyses saved to disk, survives restarts
 - **Multi-Company Support** — Analyze multiple companies, switch between them instantly
+- **AI Chat** — Ask questions about any analyzed company using the Chat tab
 
 ## 🏗️ Architecture
 
@@ -34,7 +35,7 @@ An autonomous AI-powered quarterly earnings research application that downloads 
 └──────────────────────┬──────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────┐
-│            Earnings Pipeline (main.py)                    │
+│                  Analysis Pipeline                        │
 │                                                           │
 │  Phase 1: Research + Download (parallel)                  │
 │    ├── research-company  →  news.md                       │
@@ -63,178 +64,111 @@ An autonomous AI-powered quarterly earnings research application that downloads 
 
 ## 🚀 Quick Start
 
-### Option 1: Docker (Recommended)
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/earnings-research-ai.git
-cd earnings-research-ai
-
-# Configure environment
-cp .env.example .env
-# Edit .env and add your ANTHROPIC_API_KEY
-
-# Build and run
-docker compose up -d
-
-# Open dashboard
-open http://localhost:8090
-```
-
-### Option 2: Local Installation
-
-#### Prerequisites
+### Prerequisites
 
 - Python 3.11+
-- Node.js 20+ (for Claude CLI)
-- System packages: `wkhtmltopdf`, `poppler-utils`, `ffmpeg`, `xvfb`
+- Claude Code CLI (pre-installed on supported VMs)
+- `/root/.claude/settings.json` with valid `ANTHROPIC_AUTH_TOKEN` and `ANTHROPIC_BASE_URL`
 
-#### Install
-
-```bash
-# Clone
-git clone https://github.com/yourusername/earnings-research-ai.git
-cd earnings-research-ai
-
-# Install system dependencies (Debian/Ubuntu)
-sudo apt-get install -y wkhtmltopdf poppler-utils ffmpeg xvfb \
-    libgl1-mesa-glx libgl1-mesa-dri libegl1-mesa
-
-# Install Claude CLI
-npm install -g @anthropic-ai/claude-code
-
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Configure
-cp .env.example .env
-# Edit .env with your API keys
-
-# Start the dashboard
-python server.py
-```
-
-#### CLI Usage
+### 1. Clone the repo
 
 ```bash
-# Analyze a single company
-python run_analysis.py AAPL
-
-# Analyze multiple companies
-python run_analysis.py AAPL MSFT GOOG
-
-# Auto-select (finds companies that reported today)
-python run_analysis.py --auto
+git clone git@github.com:Sodiride123/ninja-stock-analyzer.git
+cd ninja-stock-analyzer
 ```
 
-### Option 3: Deploy to Cloud
-
-#### AWS EC2 / DigitalOcean Droplet
+### 2. Install dependencies (run once)
 
 ```bash
-# SSH into your server
-ssh user@your-server
-
-# Install Docker
-curl -fsSL https://get.docker.com | sh
-
-# Clone and run
-git clone https://github.com/yourusername/earnings-research-ai.git
-cd earnings-research-ai
-cp .env.example .env
-nano .env  # Add your API keys
-
-docker compose up -d
-
-# (Optional) Set up reverse proxy with nginx for HTTPS
+bash setup.sh
 ```
 
-#### Railway / Render / Fly.io
+This installs: `wkhtmltopdf`, `poppler-utils`, `ffmpeg`, `xvfb`, OpenGL libraries, and Python packages.
 
-These platforms support Docker deployments. Push your repo and configure:
-- **Port**: 8090
-- **Environment variables**: `ANTHROPIC_API_KEY`, `RAPIDAPI_KEY`
-- **Persistent volume**: Mount at `/app/reports`
+### 3. Start the app
 
-## 🔑 API Keys Required
-
-| Key | Required | Purpose | Get it at |
-|-----|----------|---------|-----------|
-| `ANTHROPIC_API_KEY` | ✅ Yes | Claude AI for all analysis | [console.anthropic.com](https://console.anthropic.com/) |
-| `RAPIDAPI_KEY` | ⬜ Optional | Real-time stock prices | [rapidapi.com](https://rapidapi.com/letscrape-6bRBa3QguO5/api/real-time-finance-data) |
-
-## 📁 Project Structure
-
-```
-earnings_app/
-├── server.py              # HTTP server + API endpoints
-├── main.py                # Pipeline orchestrator
-├── run_analysis.py        # CLI entry point
-├── claude_wrapper.py      # Claude CLI integration
-├── finance_mcp_client.py  # RapidAPI stock data client
-├── config.py              # Configuration & colors
-├── utils.py               # Shared utilities
-├── skills/                # 12 analysis skills
-│   ├── base.py            # Abstract base skill
-│   ├── select_company.py  # Step 1: Validate ticker
-│   ├── research_company.py# Step 2: News research
-│   ├── get_reports.py     # Step 3: SEC EDGAR download
-│   ├── get_numbers.py     # Step 4: Financial extraction
-│   ├── extract_goals.py   # Step 5: Strategic goals
-│   ├── analyze_tone.py    # Step 6: Sentiment analysis
-│   ├── analyze_price.py   # Step 7: OHLC price analysis
-│   ├── get_logo.py        # Step 8: Company logo
-│   ├── compare_reports.py # Step 9: Cross-period comparison
-│   ├── generate_report.py # Step 10: PDF report
-│   ├── ten_point_analysis.py # Step 11: Bull/bear points
-│   └── animate.py         # Step 12: Video animation
-├── static/                # Frontend assets
-│   ├── index.html         # Dashboard HTML
-│   ├── css/dashboard.css  # Styles
-│   └── js/app.js          # Dashboard JavaScript
-├── reports/               # Generated analysis data
-│   └── {TICKER}/          # Per-company output files
-├── Dockerfile             # Container build
-├── docker-compose.yml     # Container orchestration
-├── requirements.txt       # Python dependencies
-└── .env.example           # Environment template
+```bash
+bash start.sh
 ```
 
-## 🖥️ Dashboard Tabs
+The app auto-reads credentials from `/root/.claude/settings.json` — no `.env` file needed.
+
+Open **http://localhost:8090**
+
+---
+
+## 🖥️ Dashboard
+
+### Running an Analysis
+
+- **Type a ticker** (e.g. `AAPL`) and click **▶ Run Analysis**
+- **⚡ Auto-Select** — randomly picks a known-good US company and starts analysis
+- **■ Stop** — appears during analysis; stops after the current step, keeps all completed results
+
+### Tabs
 
 | Tab | Content |
 |-----|---------|
 | **Overview** | Company info, filing dates, logo |
-| **News** | Top 5 recent earnings news stories |
+| **News** | Recent earnings news summary |
 | **Numbers** | Extracted financial metrics (revenue, EPS, margins) |
 | **Goals** | Strategic goals and forward guidance |
 | **Tone** | Management sentiment analysis |
-| **📈 Price** | Interactive OHLC chart with price analysis |
+| **Price** | Interactive OHLC chart with price analysis |
 | **Comparison** | Side-by-side period comparison |
 | **Report** | Full PDF report (embedded viewer) |
-| **🎯 Bullets** | 5 bullish + 5 bearish key points |
-| **🎬 Animation** | 15-second OHLC video with overlays |
+| **Bullets** | 5 bullish + 5 bearish key points |
+| **Animation** | 15-second OHLC video with overlays |
+| **Chat** | Ask questions about the analyzed company |
 | **Logs** | Real-time pipeline execution log |
 
-## 🛠️ Configuration
+### Supported Companies
 
-Edit `config.py` to customize:
+Works with any **US domestic filer** on SEC EDGAR (10-Q/10-K). Examples: `AAPL`, `MSFT`, `GOOGL`, `AMZN`, `META`, `NVDA`, `TSLA`, `JPM`, `COST`, `NFLX`.
 
-```python
-CLAUDE_MODEL = "claude-sonnet-4-6"  # AI model
-CLAUDE_MAX_TOKENS = 8192                    # Max response length
-SERVER_PORT = 8090                          # Dashboard port
-MAX_REPORT_PAGES = 5                        # PDF page limit
-PDF_PAGE_SIZE = "A4"                        # Page size
+> ⚠️ Foreign issuers (e.g. BIDU, BABA, TME) file 20-F/6-K instead of 10-Q/10-K and are not currently supported.
+
+---
+
+## 📁 Project Structure
+
+```
+ninja-stock-analyzer/
+├── server.py              # HTTP server + pipeline manager + API endpoints
+├── claude_wrapper.py      # Claude CLI subprocess integration
+├── finance_mcp_client.py  # RapidAPI stock data client
+├── config.py              # Configuration & colors
+├── utils.py               # Shared utilities
+├── main.py                # Standalone pipeline runner
+├── run_analysis.py        # CLI batch runner
+├── skills/                # 12 analysis skills (one per pipeline step)
+├── static/                # Frontend (index.html, app.js, dashboard.css)
+├── reports/               # Generated analysis data (gitignored)
+├── setup.sh               # One-time dependency installer
+├── start.sh               # App startup script
+├── requirements.txt       # Python dependencies
+└── .env.example           # Environment variable reference
 ```
 
-## 📝 License
+---
 
-MIT License — See [LICENSE](LICENSE) for details.
+## 🔑 Environment Variables
+
+Credentials are auto-loaded from `/root/.claude/settings.json` by `start.sh`. You can override any of these in a `.env` file:
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `ANTHROPIC_API_KEY` | from settings.json | Claude API authentication |
+| `ANTHROPIC_BASE_URL` | from settings.json | Claude API endpoint |
+| `ANTHROPIC_MODEL` | `claude-sonnet-4-6` | Model to use |
+| `RAPIDAPI_KEY` | built-in | Stock price & news data |
+| `SERVER_PORT` | `8090` | Dashboard port |
+
+---
 
 ## 🙏 Credits
 
 - **Claude AI** by Anthropic — Powers all analysis
 - **SEC EDGAR** — Financial filing data source
-- **Real-Time Finance Data API** — Stock price data
+- **Real-Time Finance Data API** — Stock price & news data
 - **Python Arcade** — Animation rendering engine
