@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environment
+.env
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Reports data (mounted as volume)
+reports/
+
+# Docs
+*.md
+!README.md
+LICENSE
+
+# Git
+.git/
+.gitignore
+
+# Misc
+todo.md
+costco_comparative_analysis.md

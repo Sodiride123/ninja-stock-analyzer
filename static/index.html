@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Analyst</title>
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://sites.super.betamyninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ── Loading Overlay ──────────────────────────── -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+      <div class="spinner-ring"></div>
+      <div class="spinner-ticker" id="loadingTicker"></div>
+      <div class="spinner-text" id="loadingText">Loading analysis…</div>
+    </div>
+  </div>
+
+    <!-- ── Top Bar ──────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <img src="/img/avatar-64.png" alt="±" class="brand-avatar">
+      Stock Analyst
+    </div>
+    <div class="topbar-actions">
+      <div class="input-group">
+        <input type="text" id="tickerInput" class="input-field"
+               placeholder="Ticker (e.g. AAPL)" style="width:160px"
+               onkeydown="if(event.key==='Enter') runPipeline()">
+        <button class="btn btn-primary" id="runBtn" onclick="runPipeline()">
+          ▶ Run Analysis
+        </button>
+        <button class="btn btn-secondary" id="autoBtn" onclick="autoSelect()">
+          ⚡ Auto-Select
+        </button>
+        <button class="btn btn-danger" id="stopBtn" onclick="stopPipeline()" style="display:none">
+          ■ Stop
+        </button>
+      </div>
+      <button class="btn btn-ghost" id="helpBtn" onclick="toggleHelp()" title="Help">❓ Help</button>
+      <span id="statusIndicator" class="status-dot offline" title="Idle"></span>
+    </div>
+  </header>
+
+  <!-- ── Main Content ─────────────────────────── -->
+  <main class="main-content">
+
+    <!-- Past Analyses Bar -->
+    <section class="history-bar" id="historyBar" style="display:none">
+      <div class="history-label">📊 My Stocks:</div>
+      <div class="history-chips" id="historyChips"></div>
+    </section>
+
+    <!-- Hero / Company Banner (hidden until loaded) -->
+    <section class="hero" id="heroBanner" style="display:none">
+      <div class="hero-logo-wrap" id="heroLogoWrap">
+        <img class="hero-logo" id="heroLogo" src="" alt="" style="display:none" />
+        <div class="hero-ticker-fallback" id="heroTickerFallback">—</div>
+      </div>
+      <div>
+        <div class="hero-name" id="heroName">Select a company to begin</div>
+        <div class="hero-meta" id="heroMeta"></div>
+      </div>
+    </section>
+
+    <!-- Pipeline Progress Bar -->
+    <div class="progress-bar-wrap" id="progressBar" style="display:none">
+      <div class="progress-info">
+        <span class="progress-text" id="progressText">0/12 steps</span>
+        <span class="progress-step" id="progressStep"></span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div class="progress-counts" id="progressCounts"></div>
+      <div class="progress-tip" id="progressTip" style="display:none"></div>
+      <div class="progress-message" id="progressMessage" style="display:none"></div>
+    </div>
+
+    <!-- Tabs for content -->
+    <div class="tab-bar" id="tabBar">
+      <button class="tab-btn active" data-tab="overview" data-steps="select_company" onclick="switchTab('overview')"><span class="tab-indicator"></span>Overview</button>
+      <button class="tab-btn" data-tab="news" data-steps="research_company,get_reports" onclick="switchTab('news')"><span class="tab-indicator"></span>News</button>
+      <button class="tab-btn" data-tab="numbers" data-steps="get_numbers" onclick="switchTab('numbers')"><span class="tab-indicator"></span>Numbers</button>
+      <button class="tab-btn" data-tab="goals" data-steps="extract_goals" onclick="switchTab('goals')"><span class="tab-indicator"></span>Goals</button>
+      <button class="tab-btn" data-tab="tone" data-steps="analyze_tone" onclick="switchTab('tone')"><span class="tab-indicator"></span>Tone</button>
+      <button class="tab-btn" data-tab="price" data-steps="analyze_price" onclick="switchTab('price')"><span class="tab-indicator"></span>Price</button>
+      <button class="tab-btn" data-tab="compare" data-steps="compare_reports" onclick="switchTab('compare')"><span class="tab-indicator"></span>Compare</button>
+      <button class="tab-btn" data-tab="report" data-steps="generate_report" onclick="switchTab('report')"><span class="tab-indicator"></span>Report</button>
+      <button class="tab-btn" data-tab="bullets" data-steps="ten_point_analysis" onclick="switchTab('bullets')"><span class="tab-indicator"></span>Bullets</button>
+      <button class="tab-btn" data-tab="chat" onclick="switchTab('chat')">💬 Chat</button>
+      <button class="tab-btn" data-tab="logs" onclick="switchTab('logs')">Logs</button>
+    </div>
+
+    <!-- Tab: Overview -->
+    <div class="tab-pane active" id="tab-overview">
+      <div class="metric-grid" id="metricsGrid" style="display:none"></div>
+
+      <!-- Company Logo -->
+      <div id="companyLogoContainer" style="display:none; text-align:center; margin-bottom:20px;">
+        <img id="companyLogo" src="" alt="Company Logo"
+             style="max-width:120px; max-height:120px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.3); border:2px solid var(--c-border);">
+      </div>
+
+      <div class="empty-state" id="emptyState">
+        <div class="icon">📊</div>
+        <h3>No Analysis Running</h3>
+        <p>Enter a ticker symbol and click <strong>Run Analysis</strong>, or click
+           <strong>Auto-Select</strong> to find a company that reported earnings today.</p>
+      </div>
+
+      <div class="section-grid" id="overviewGrid" style="display:none">
+        <!-- OHLC Animation Video -->
+        <div class="card section-full" id="overviewVideoCard" style="display:none; text-align:center; padding:20px;">
+          <div id="animationReady">
+            <video id="animationVideo" controls
+                   style="max-width:100%; max-height:400px; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+              <source src="" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            <div style="margin-top:10px;">
+              <a id="videoDownloadLink" class="btn btn-secondary" href="#" download style="font-size:.8rem; padding:4px 14px;">⬇ Download MP4</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card section-full" id="overviewSummary">
+          <div class="card-header">
+            <span class="card-title">Executive Summary</span>
+            <span class="card-badge badge-info" id="overviewBadge">Pending</span>
+          </div>
+          <div class="md-content" id="overviewContent">Waiting for analysis…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: News -->
+    <div class="tab-pane" id="tab-news">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📰 News Summary</span>
+        </div>
+        <div class="md-content" id="newsContent">
+          <p style="color:var(--c-text-dim)">Run the pipeline to generate a news summary.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Numbers -->
+    <div class="tab-pane" id="tab-numbers">
+      <div class="section-grid">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Latest Report Numbers</span>
+            <span class="card-badge badge-pos" id="numbersLatestDate">—</span>
+          </div>
+          <div class="md-content" id="numbersLatest">
+            <p style="color:var(--c-text-dim)">Pending extraction…</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Prior Report Numbers</span>
+            <span class="card-badge badge-info" id="numbersPriorDate">—</span>
+          </div>
+          <div class="md-content" id="numbersPrior">
+            <p style="color:var(--c-text-dim)">Pending extraction…</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Goals -->
+    <div class="tab-pane" id="tab-goals">
+      <div class="section-grid">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Latest Report Goals</span>
+            <span class="card-badge badge-pos" id="goalsLatestDate">—</span>
+          </div>
+          <div class="md-content" id="goalsLatest">
+            <p style="color:var(--c-text-dim)">Pending extraction…</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Prior Report Goals</span>
+            <span class="card-badge badge-info" id="goalsPriorDate">—</span>
+          </div>
+          <div class="md-content" id="goalsPrior">
+            <p style="color:var(--c-text-dim)">Pending extraction…</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Tone -->
+    <div class="tab-pane" id="tab-tone">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🎯 Tonal Analysis</span>
+        </div>
+        <div class="md-content" id="toneContent">
+          <p style="color:var(--c-text-dim)">Run the pipeline to generate tonal analysis.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Price Analysis -->
+    <div class="tab-pane" id="tab-price">
+      <!-- Sentiment summary cards -->
+      <div class="price-sentiment-row" id="priceSentimentRow" style="display:none">
+        <div class="sentiment-card" id="sentimentInterCard">
+          <div class="sentiment-label">Inter-Report Period</div>
+          <div class="sentiment-dates" id="sentimentInterDates">—</div>
+          <div class="sentiment-badge" id="sentimentInterBadge">—</div>
+          <div class="sentiment-change" id="sentimentInterChange">—</div>
+        </div>
+        <div class="sentiment-card" id="sentimentPostCard">
+          <div class="sentiment-label">Post-Earnings Reaction</div>
+          <div class="sentiment-dates" id="sentimentPostDates">—</div>
+          <div class="sentiment-badge" id="sentimentPostBadge">—</div>
+          <div class="sentiment-change" id="sentimentPostChange">—</div>
+        </div>
+      </div>
+
+      <!-- Chart area -->
+      <div class="card" id="priceChartCard" style="display:none">
+        <div class="card-header">
+          <span class="card-title">📊 Price Chart</span>
+          <div class="chart-toggle">
+            <button class="chart-toggle-btn active" id="btnInterReport" onclick="showChartWindow('inter')">Inter-Report</button>
+            <button class="chart-toggle-btn" id="btnPostEarnings" onclick="showChartWindow('post')">Post-Earnings</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="priceCanvas"></canvas>
+          <div class="chart-tooltip" id="chartTooltip"></div>
+        </div>
+        <!-- Volume bars -->
+        <div class="volume-container">
+          <canvas id="volumeCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Stats tables -->
+      <div class="section-grid" id="priceStatsGrid" style="display:none">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Inter-Report Statistics</span>
+            <span class="card-badge badge-info" id="priceInterDays">— days</span>
+          </div>
+          <div id="priceInterStats"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Post-Earnings Statistics</span>
+            <span class="card-badge badge-info" id="pricePostDays">— days</span>
+          </div>
+          <div id="pricePostStats"></div>
+        </div>
+      </div>
+
+      <!-- Full analysis markdown -->
+      <div class="card" id="priceAnalysisCard" style="display:none">
+        <div class="card-header">
+          <span class="card-title">📋 Full Price Analysis</span>
+        </div>
+        <div class="md-content" id="priceAnalysisContent">
+          <p style="color:var(--c-text-dim)">Run the pipeline to generate price analysis.</p>
+        </div>
+      </div>
+
+      <!-- Placeholder when no data -->
+      <div id="pricePending">
+        <p style="color:var(--c-text-dim); padding:24px; text-align:center">
+          Run the pipeline to generate stock price analysis and OHLC chart.
+        </p>
+      </div>
+    </div>
+
+    <!-- Tab: Comparison -->
+    <div class="tab-pane" id="tab-compare">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📊 Comparative Report</span>
+        </div>
+        <div class="md-content" id="compareContent">
+          <p style="color:var(--c-text-dim)">Run the pipeline to generate comparison.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Report -->
+    <div class="tab-pane" id="tab-report">
+      <div class="card" style="text-align:center; padding:40px;">
+        <div id="reportLinks" style="display:none">
+          <h3 style="margin-bottom:16px; color:var(--c-accent-pos);">📄 Report Generated</h3>
+          <div style="display:flex; justify-content:center; gap:14px; flex-wrap:wrap;">
+            <a id="pdfLink" class="btn btn-primary" href="#" target="_blank">⬇ Download PDF</a>
+            <a id="htmlLink" class="btn btn-secondary" href="#" target="_blank">🌐 View HTML</a>
+          </div>
+        </div>
+        <div id="reportPending">
+          <p style="color:var(--c-text-dim)">The final report will appear here after the pipeline completes.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Bullets (Ten-Point Analysis) -->
+    <div class="tab-pane" id="tab-bullets">
+      <div class="card" id="bulletsCard">
+        <div class="card-header">
+          <span class="card-title">🎯 Ten-Point Analysis</span>
+          <span class="card-badge badge-info" id="bulletsBadge">Pending</span>
+        </div>
+        <div id="bulletsContent" style="padding:20px;">
+          <p style="color:var(--c-text-dim)">Bullet points will appear after the ten-point analysis completes.</p>
+        </div>
+        <div id="bulletsGrid" style="display:none; padding:20px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+            <!-- Yay Column -->
+            <div>
+              <h3 style="color:var(--c-accent-pos); margin-bottom:14px; font-size:1.1rem;">
+                ▲ Positive Signals
+              </h3>
+              <div id="yayBullets"></div>
+            </div>
+            <!-- Nay Column -->
+            <div>
+              <h3 style="color:var(--c-accent-neg); margin-bottom:14px; font-size:1.1rem;">
+                ▼ Risk Factors
+              </h3>
+              <div id="nayBullets"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Animation -->
+    
+
+    <!-- Tab: Logs -->
+    <div class="tab-pane" id="tab-logs">
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <span class="card-title">🖥 Pipeline Logs</span>
+          <button class="btn btn-secondary" onclick="clearLogs()" style="padding:4px 12px; font-size:.78rem;">Clear</button>
+        </div>
+        <div class="log-area" id="logArea">Waiting for pipeline to start…
+</div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📋 Claude Run Log</span>
+          <button class="btn btn-secondary" onclick="refreshRunLog()" style="padding:4px 12px; font-size:.78rem;">Refresh</button>
+        </div>
+        <div class="log-area" id="runLogArea" style="max-height:500px;">No run log yet.
+</div>
+      </div>
+    </div>
+
+    <!-- Tab: Chat -->
+    <div class="tab-pane" id="tab-chat">
+      <div class="card chat-card">
+        <div class="card-header">
+          <span class="card-title">💬 Ask Claude about this stock</span>
+          <button class="btn btn-secondary" onclick="clearChat()" style="padding:4px 12px; font-size:.78rem;">Clear Chat</button>
+        </div>
+        <div class="chat-notice">Chat history is automatically cleared when you switch companies.</div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-msg assistant">
+            <div class="chat-bubble">Hi! I can answer questions about the currently loaded stock. I have access to all the analysis files — news, financials, goals, tone, comparisons, and reports. What would you like to know?</div>
+          </div>
+        </div>
+        <div class="chat-input-bar">
+          <input type="text" id="chatInput" class="input-field chat-input"
+                 placeholder="Ask about earnings, financials, trends…"
+                 onkeydown="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); sendChat(); }">
+          <button class="btn btn-primary chat-send" id="chatSendBtn" onclick="sendChat()">Send</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── Footer ───────────────────────────────── -->
+  
+  <!-- ── Help Modal ──────────────────────────────── -->
+  <div class="help-overlay" id="helpOverlay" onclick="if(event.target===this)toggleHelp()">
+    <div class="help-modal">
+      <div class="help-header">
+        <h2>📖 Stock Analyst — Help Guide</h2>
+        <button class="help-close" onclick="toggleHelp()">✕</button>
+      </div>
+      <div class="help-body">
+
+        <h3>🚀 Getting Started</h3>
+        <p>Stock Analyst is an AI-powered research tool that automatically analyzes publicly traded companies using SEC filings, financial data, and AI-driven insights.</p>
+
+        <h3>📊 Ways to Use the App</h3>
+
+        <h4>1. Web Dashboard (this page)</h4>
+        <ul>
+          <li><strong>Run Analysis:</strong> Type a stock ticker (e.g. <code>AAPL</code>, <code>NVDA</code>, <code>TSLA</code>) in the input field and click <em>▶ Run Analysis</em>.</li>
+          <li><strong>Auto-Select:</strong> Click <em>⚡ Auto-Select</em> to let the AI pick an interesting company to analyze.</li>
+          <li><strong>My Stocks:</strong> Previously analyzed stocks appear in the bar at the top. Click any chip to reload that analysis instantly.</li>
+          <li><strong>Rerun / Delete:</strong> Use the ↻ and ✕ buttons next to each stock chip to rerun or delete an analysis.</li>
+          <li><strong>Direct URL:</strong> Share or bookmark a URL like <code>#NVDA</code> to jump directly to a stock's analysis.</li>
+        </ul>
+
+        <h4>2. Command Line (CLI)</h4>
+        <p>Run analysis from the terminal using the CLI script:</p>
+        <pre><code>python run_analysis.py AAPL              # Analyze (cleans existing data first)
+python run_analysis.py AAPL MSFT GOOG   # Analyze multiple tickers
+python run_analysis.py --all             # Re-run ALL existing analyses
+python run_analysis.py --keep AAPL       # Analyze without deleting existing data
+python run_analysis.py --list            # List all past analyses</code></pre>
+        <p>You can also use a SuperNinja prompt:</p>
+        <pre><code>Using the run_analysis.py script refresh the analysis for stock AAPL</code></pre>
+
+        <h3>📑 Analysis Pipeline (12 Steps)</h3>
+        <ol>
+          <li><strong>Select Company</strong> — Identifies the company from the ticker symbol</li>
+          <li><strong>Research News</strong> — Gathers recent news and market context</li>
+          <li><strong>Download Reports</strong> — Fetches 10-K and 10-Q filings from SEC EDGAR</li>
+          <li><strong>Extract Numbers</strong> — Pulls key financial metrics from filings</li>
+          <li><strong>Extract Goals</strong> — Identifies management goals and forward guidance</li>
+          <li><strong>Analyze Tone</strong> — AI sentiment analysis of filing language</li>
+          <li><strong>Analyze Price</strong> — OHLC price data with technical analysis</li>
+          <li><strong>Get Logo</strong> — Fetches the company's official logo</li>
+          <li><strong>Compare Reports</strong> — Quarter-over-quarter comparison</li>
+          <li><strong>Generate Report</strong> — Creates a comprehensive HTML/PDF report</li>
+          <li><strong>Ten-Point Analysis</strong> — Yay/Nay bullet-point summary</li>
+          <li><strong>Animate</strong> — Generates an animated OHLC chart video (shown at top of Overview)</li>
+        </ol>
+
+        <h3>📈 Dashboard Tabs</h3>
+        <ul>
+          <li><strong>Overview</strong> — Summary with key metrics, company logo, and OHLC animation video</li>
+          <li><strong>News</strong> — Recent news and market context</li>
+          <li><strong>Numbers</strong> — Extracted financial data from latest and prior filings</li>
+          <li><strong>Goals</strong> — Management guidance and strategic goals</li>
+          <li><strong>Tone</strong> — Sentiment analysis of SEC filing language</li>
+          <li><strong>Price</strong> — Interactive OHLC chart with volume, stats, and AI analysis</li>
+          <li><strong>Comparison</strong> — Side-by-side comparison of two filing periods</li>
+          <li><strong>Report</strong> — Full HTML/PDF research report</li>
+          <li><strong>Bullets</strong> — Quick yay/nay ten-point summary</li>
+          <li><strong>Chat</strong> — Ask Claude questions about the loaded stock</li>
+          <li><strong>Logs</strong> — Pipeline execution logs and run history</li>
+        </ul>
+
+        <h3>⚙️ Tips</h3>
+        <ul>
+          <li>Analysis typically takes 3–15 minutes depending on filing size.</li>
+          <li>Large filings (70+ pages) may cause some steps to time out — the pipeline continues past failures.</li>
+          <li>All data is persisted to disk — reload the page anytime without losing progress.</li>
+          <li>The pipeline steps run in parallel where possible for faster results.</li>
+          <li><strong>Re-run individual steps</strong> by right-clicking any tab (except Overview). This lets you refresh specific parts of the analysis without re-running everything. Tabs show status indicators: 🟢 done, 🟡 running/partial, 🔴 error.</li>
+        </ul>
+
+      </div>
+    </div>
+  </div>
+
+<footer class="app-footer">
+    Stock Analyst &middot; Powered by Claude &middot; Data from SEC EDGAR
+  </footer>
+
+</div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>

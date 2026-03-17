@@ -1,0 +1,35 @@
+# ============================================================
+# Earnings Research AI — Docker Compose
+# ============================================================
+# Usage:
+#   1. Copy .env.example to .env and fill in your API keys
+#   2. Run: docker compose up -d
+#   3. Open: http://localhost:8090
+# ============================================================
+
+version: "3.9"
+
+services:
+  earnings-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: earnings-research-ai
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT:-8090}:8090"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - RAPIDAPI_KEY=${RAPIDAPI_KEY:-}
+      - SEC_USER_AGENT=${SEC_USER_AGENT:-EarningsResearchApp admin@earningsapp.com}
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=8090
+    volumes:
+      # Persist analysis reports across container restarts
+      - earnings_data:/app/reports
+    # Xvfb needs this for headless OpenGL rendering
+    shm_size: "256m"
+
+volumes:
+  earnings_data:
+    driver: local
