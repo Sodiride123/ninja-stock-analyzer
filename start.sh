@@ -7,6 +7,8 @@
 
 set -e
 
+cd "$(dirname "$0")"
+
 # Load .env file if it exists
 if [ -f .env ]; then
     echo "📄 Loading environment from .env"
@@ -19,6 +21,11 @@ if [ -f "$CLAUDE_SETTINGS" ]; then
     export ANTHROPIC_API_KEY=$(python3 -c "import json; d=json.load(open('$CLAUDE_SETTINGS')); print(d['env']['ANTHROPIC_AUTH_TOKEN'])")
     export ANTHROPIC_BASE_URL=$(python3 -c "import json; d=json.load(open('$CLAUDE_SETTINGS')); print(d['env']['ANTHROPIC_BASE_URL'])")
     export ANTHROPIC_MODEL=claude-sonnet-4-6
+fi
+
+# Set RapidAPI key if not already set (used for stock price & news data)
+if [ -z "$RAPIDAPI_KEY" ]; then
+    export RAPIDAPI_KEY=$(python3 -c "from finance_mcp_client import MCP_CONFIG; print(MCP_CONFIG['rapidapi_key'])")
 fi
 
 # Check required environment variables
