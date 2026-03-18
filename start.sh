@@ -58,12 +58,6 @@ echo "════════════════════════�
 echo ""
 echo "  Dashboard:  http://localhost:${SERVER_PORT:-8090}"
 echo "  API:        http://localhost:${SERVER_PORT:-8090}/api/status"
-echo ""
-echo "  Claude Model: ${ANTHROPIC_MODEL:-claude-sonnet-4-6}"
-echo "  RapidAPI:     $([ -n "$RAPIDAPI_KEY" ] && echo '✅ Configured' || echo '⚠️  Not set (price analysis disabled)')"
-echo ""
-echo "══════════════════════════════════════════════════════════"
-echo ""
 
 # Start the server
 exec python server.py
