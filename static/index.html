@@ -111,9 +111,33 @@
 
       <div class="empty-state" id="emptyState">
         <div class="icon">📊</div>
-        <h3>No Analysis Running</h3>
-        <p>Enter a ticker symbol and click <strong>Run Analysis</strong>, or click
-           <strong>Auto-Select</strong> to find a company that reported earnings today.</p>
+        <h3>Welcome — here's how to get started</h3>
+        <div class="guide-tips">
+          <div class="guide-tip">
+            <span class="guide-tip-num">1</span>
+            <div>
+              <strong>Search by ticker</strong> — Type a stock ticker (e.g. <code>NVDA</code>, <code>MSFT</code>) in the top-right input and click <strong>Run Analysis</strong>.
+            </div>
+          </div>
+          <div class="guide-tip">
+            <span class="guide-tip-num">2</span>
+            <div>
+              <strong>Not sure what to pick?</strong> — Click <strong>Auto-Select</strong> and the app will randomly choose a stock and begin analysis for you.
+            </div>
+          </div>
+          <div class="guide-tip">
+            <span class="guide-tip-num">3</span>
+            <div>
+              <strong>Supported companies</strong>
+              <ul class="guide-support-list">
+                <li><span class="guide-check">✓</span><span> All US-incorporated public companies on NYSE / NASDAQ — large-caps like <code>GOOGL</code>, <code>NVDA</code>, <code>MSFT</code>, mid-caps like <code>CROX</code>, small-caps like <code>CTRN</code>, etc. — as long as they have at least one recent 10-Q or 10-K filing on SEC EDGAR.</span></li>
+                <li><span class="guide-cross">✗</span><span> Foreign private issuers trading as ADRs — e.g. <code>BIDU</code>, <code>BABA</code>, <code>NIO</code>, <code>JD</code>. They file 20-F / 6-K reports instead of 10-Q / 10-K, so the app cannot retrieve their filings.</span></li>
+                <li><span class="guide-cross">✗</span><span> Companies not listed on US exchanges at all (HK / London / Tokyo listings only).</span></li>
+              </ul>
+              <p class="guide-rule">Rule of thumb: if the company is a US domestic filer on SEC EDGAR, it works. If it's a foreign issuer on ADRs, it won't.</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="section-grid" id="overviewGrid" style="display:none">

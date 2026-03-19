@@ -46,27 +46,17 @@ class AnalyzePriceSkill(BaseSkill):
         if not self._mcp:
             raise RuntimeError("finance_mcp_client not available")
 
-        symbol = f"{ticker}:NASDAQ"
-        # Try NASDAQ first, fall back to NYSE
-        try:
-            result = self._mcp.stock_time_series(symbol=symbol, period="1Y")
-            if result.get("status") == "OK":
-                return result["data"].get("time_series", {})
-        except Exception:
-            pass
+        # Try NASDAQ, then NYSE, then bare ticker — skip any that return empty data
+        for symbol in [f"{ticker}:NASDAQ", f"{ticker}:NYSE", ticker]:
+            try:
+                result = self._mcp.stock_time_series(symbol=symbol, period="1Y")
+                if result.get("status") == "OK":
+                    ts = result["data"].get("time_series", {})
+                    if ts:
+                        return ts
+            except Exception:
+                pass
 
-        symbol = f"{ticker}:NYSE"
-        try:
-            result = self._mcp.stock_time_series(symbol=symbol, period="1Y")
-            if result.get("status") == "OK":
-                return result["data"].get("time_series", {})
-        except Exception:
-            pass
-
-        # Last resort: just ticker
-        result = self._mcp.stock_time_series(symbol=ticker, period="1Y")
-        if result.get("status") == "OK":
-            return result["data"].get("time_series", {})
         raise RuntimeError(f"Could not fetch time series for {ticker}")
 
     def _filter_series(self, ts: dict, start_date: str, end_date: str) -> list:
